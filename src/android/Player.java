@@ -73,12 +73,14 @@ public class Player {
     private ExoPlayer.EventListener playerEventListener = new ExoPlayer.EventListener() {
         @Override
         public void onLoadingChanged(boolean isLoading) {
+            // TODO disabled for debug
             //JSONObject payload = Payload.loadingEvent(Player.this.exoPlayer, isLoading);
             //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+            // TODO disabled for debug
             //Log.i(TAG, "Playback parameters changed");
         }
 
@@ -93,6 +95,7 @@ public class Player {
             if (config.getShowBuffering()) {
                 LayoutProvider.setBufferingVisibility(exoView, activity, playbackState == ExoPlayer.STATE_BUFFERING);
             }
+            // TODO disabled for debug
             //JSONObject payload = Payload.stateEvent(Player.this.exoPlayer, playbackState, Player.this.controllerVisibility == View.VISIBLE);
             //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
         }
