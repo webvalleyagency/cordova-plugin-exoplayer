@@ -59,6 +59,7 @@ public class Player {
     private CordovaWebView webView;
     private int controllerVisibility;
     private boolean paused = false;
+    private long position = 0;
     private AudioManager audioManager;
 
     public Player(Configuration config, Activity activity, CallbackContext callbackContext, CordovaWebView webView) {
@@ -72,13 +73,13 @@ public class Player {
     private ExoPlayer.EventListener playerEventListener = new ExoPlayer.EventListener() {
         @Override
         public void onLoadingChanged(boolean isLoading) {
-            JSONObject payload = Payload.loadingEvent(Player.this.exoPlayer, isLoading);
-            new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
+            //JSONObject payload = Payload.loadingEvent(Player.this.exoPlayer, isLoading);
+            //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            Log.i(TAG, "Playback parameters changed");
+            //Log.i(TAG, "Playback parameters changed");
         }
 
         @Override
@@ -92,21 +93,21 @@ public class Player {
             if (config.getShowBuffering()) {
                 LayoutProvider.setBufferingVisibility(exoView, activity, playbackState == ExoPlayer.STATE_BUFFERING);
             }
-            JSONObject payload = Payload.stateEvent(Player.this.exoPlayer, playbackState, Player.this.controllerVisibility == View.VISIBLE);
-            new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
+            //JSONObject payload = Payload.stateEvent(Player.this.exoPlayer, playbackState, Player.this.controllerVisibility == View.VISIBLE);
+            //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
         }
 
         @Override
         public void onPositionDiscontinuity(int reason) {
-            JSONObject payload = Payload.positionDiscontinuityEvent(Player.this.exoPlayer, reason);
-            new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
+            //JSONObject payload = Payload.positionDiscontinuityEvent(Player.this.exoPlayer, reason);
+            //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
         }
 
         @Override
         public void onRepeatModeChanged(int newRepeatMode) {
             // Need to see if we want to send this to Cordova.
         }
-    
+
         @Override
         public void onSeekProcessed() {
         }
@@ -116,9 +117,9 @@ public class Player {
         }
 
         @Override
-        public void onTimelineChanged(Timeline timeline, Object manifest) {
-            JSONObject payload = Payload.timelineChangedEvent(Player.this.exoPlayer, timeline, manifest);
-            new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
+        public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
+            //JSONObject payload = Payload.timelineChangedEvent(Player.this.exoPlayer, timeline, manifest);
+            //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
         }
 
         @Override
@@ -134,7 +135,7 @@ public class Player {
                 exoPlayer.release();
             }
             exoPlayer = null;
-            JSONObject payload = Payload.stopEvent(exoPlayer);
+            JSONObject payload = Payload.stopEvent(exoPlayer, position);
             new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
         }
     };
@@ -151,8 +152,12 @@ public class Player {
                 return false;
             }
             else {
-                JSONObject payload = Payload.keyEvent(event);
-                new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
+                // TODO REWORK
+                if(key.equals("KEYCODE_BACK")) {
+                    close();
+                }
+                //JSONObject payload = Payload.keyEvent(event);
+                //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
                 return true;
             }
         }
@@ -165,9 +170,15 @@ public class Player {
         public boolean onTouch(View v, MotionEvent event) {
             int eventAction = event.getAction();
             if (previousAction != eventAction) {
-                previousAction = eventAction;
-                JSONObject payload = Payload.touchEvent(event);
-                new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
+                // TODO REWORK
+                if(eventAction == MotionEvent.ACTION_UP) {
+                    exoView.showController();
+                }
+
+                // TODO disabled event
+                //previousAction = eventAction;
+                //JSONObject payload = Payload.touchEvent(event);
+                //new CallbackResponse(Player.this.callbackContext).send(PluginResult.Status.OK, payload, true);
             }
             return true;
         }
@@ -263,10 +274,11 @@ public class Player {
         if (mediaSource != null) {
             long offset = config.getSeekTo();
             boolean autoPlay = config.autoPlay();
+            exoPlayer.prepare(mediaSource);
+
             if (offset > -1) {
                 exoPlayer.seekTo(offset);
             }
-            exoPlayer.prepare(mediaSource);
 
             exoPlayer.setPlayWhenReady(autoPlay);
             paused = !autoPlay;
@@ -341,6 +353,7 @@ public class Player {
     public void close() {
         audioManager.abandonAudioFocus(audioFocusChangeListener);
         if (exoPlayer != null) {
+            this.position = exoPlayer.getCurrentPosition();
             exoPlayer.release();
             exoPlayer = null;
         }
@@ -350,7 +363,7 @@ public class Player {
     }
 
     public void setStream(Uri uri, JSONObject controller) {
-        if (null != uri && null != exoPlayer) {
+        if (null != uri) {
             DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
             MediaSource mediaSource = getMediaSource(uri, bandwidthMeter);
             exoPlayer.prepare(mediaSource);
@@ -369,10 +382,8 @@ public class Player {
     }
 
     private void pause() {
-        if (null != exoPlayer) {
-            paused = true;
-            exoPlayer.setPlayWhenReady(false);
-        }
+        paused = true;
+        exoPlayer.setPlayWhenReady(false);
     }
 
     private void play() {

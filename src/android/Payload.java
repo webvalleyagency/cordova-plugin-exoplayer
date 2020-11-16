@@ -65,9 +65,10 @@ public class Payload {
         return new JSONObject(map);
     }
 
-    public static JSONObject stopEvent(ExoPlayer player) {
+    public static JSONObject stopEvent(ExoPlayer player, long position) {
         Map<String, String> map = new HashMap<String, String>();
         map.put("eventType", "STOP_EVENT");
+        map.put("duration", Long.toString(position));
         return new JSONObject(map);
     }
 
