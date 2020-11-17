@@ -41,6 +41,7 @@ import com.google.android.exoplayer2.trackselection.*;
 import com.google.android.exoplayer2.ui.*;
 import com.google.android.exoplayer2.upstream.*;
 import com.google.android.exoplayer2.util.*;
+import com.google.android.exoplayer2.util.Log;
 import com.squareup.picasso.*;
 import java.lang.*;
 import java.lang.Math;
@@ -61,6 +62,7 @@ public class Player {
     private boolean paused = false;
     private long position = 0;
     private AudioManager audioManager;
+    private View fullscreenButton;
 
     public Player(Configuration config, Activity activity, CallbackContext callbackContext, CordovaWebView webView) {
         this.config = config;
@@ -249,6 +251,10 @@ public class Player {
         dialog.getWindow().setAttributes(LayoutProvider.getDialogLayoutParams(activity, config, dialog));
         exoView.requestFocus();
         exoView.setOnTouchListener(onTouchListener);
+
+        fullscreenButton = exoView.findViewById(R.id.exo_fullscreen_icon);
+        fullscreenButton.setOnClickListener(view -> close());
+
         LayoutProvider.setupController(exoView, activity, config.getController());
     }
 
@@ -420,7 +426,7 @@ public class Player {
 
     public JSONObject getPlayerState() {
         return Payload.stateEvent(exoPlayer,
-                null != exoPlayer ? exoPlayer.getPlaybackState() : SimpleExoPlayer.STATE_ENDED,
+                null != exoPlayer ? exoPlayer.getPlaybackState() : com.google.android.exoplayer2.Player.STATE_ENDED,
                 Player.this.controllerVisibility == View.VISIBLE);
     }
 
