@@ -252,8 +252,9 @@ public class Player {
         exoView.requestFocus();
         exoView.setOnTouchListener(onTouchListener);
 
-        fullscreenButton = exoView.findViewById(R.id.exo_fullscreen_icon);
-        fullscreenButton.setOnClickListener(view -> close());
+        // TODO fullscreenbutton implementation
+        //fullscreenButton = exoView.findViewById(R.id.exo_fullscreen_icon);
+        //fullscreenButton.setOnClickListener(view -> close());
 
         LayoutProvider.setupController(exoView, activity, config.getController());
     }
